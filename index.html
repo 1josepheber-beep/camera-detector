@@ -86,7 +86,7 @@ h3{font-size:15px;margin:22px 0 8px;color:var(--mut);text-transform:uppercase;le
   <button class="card" onclick="openCam('lens')"><b>Lens finder <span class="tag t-best">BEST</span></b><span>Flashlight + camera. Hidden lenses reflect light back as a tiny bright dot. Auto-marks suspects.</span></button>
   <button class="card" onclick="openCam('ir')"><b>Infrared check <span class="tag t-ok">IN THE DARK</span></b><span>Spots the invisible night-vision lights many hidden cameras use.</span></button>
   <button class="card" onclick="openCheck()"><b>Room checklist <span class="tag t-best">DO THIS</span></b><span>Where cameras hide, plus how to check the Wi-Fi and what to do if you find one.</span></button>
-  <button class="card" onclick="openMag()"><b>Magnetic sensor <span class="tag t-weak">WEAK</span></b><span>Detects powered electronics near the phone. May not be available in Chrome.</span></button>
+  <button class="card" onclick="openMag()"><b>Magnetic sensor <span class="tag t-weak">WEAK</span></b><span>Checks objects that shouldn't have electronics inside. Uses a free app.</span></button>
   <div class="note">Tip: tap Chrome's ⋮ menu → <b>Add to Home screen</b> to open this like an app.</div>
 </div></section>
 
@@ -415,7 +415,15 @@ function draw(vw,vh){
 
 /* ================= MAGNET ================= */
 let mag=null,base=null,bs=[],ac=null,osc=null,gain=null,soundOn=true;
-const UNSUP='Chrome hasn\'t unlocked the magnetic sensor for websites on this phone. To try it: type <b>chrome://flags</b> in Chrome\'s address bar, search <b>Generic Sensor Extra Classes</b>, set it to Enabled, restart Chrome, then come back. This is the weakest tool, so it\'s fine to skip.';
+const PLAY='https://play.google.com/store/apps/details?id=com.chrystianvieyra.physicstoolboxsuite';
+const UNSUP='<b>Chrome no longer lets websites use the magnetic sensor</b>, so use a free app for this check.'
+ +'<ol style="padding-left:20px;margin:12px 0;color:var(--text)">'
+ +'<li>Install <a href="'+PLAY+'" target="_blank" rel="noopener" style="color:#ff8a80">Physics Toolbox Sensor Suite</a> (free, Play Store).</li>'
+ +'<li>Open it and tap <b>Magnetometer</b>.</li>'
+ +'<li>Hold the phone away from electronics and note the number.</li>'
+ +'<li>Move the <b>top edge</b> of the phone slowly over the object.</li>'
+ +'<li>A big jump means something magnetic or electronic is inside.</li></ol>'
+ +'<div class="note" style="margin-top:4px"><b>Best for objects that shouldn\'t have electronics</b>: books, tissue boxes, stuffed animals, picture frames, plant pots. Clocks, chargers, smoke detectors and TVs will always cause a jump, so don\'t use it on those.</div>';
 function openMag(){show('magS');history.pushState({s:1},'');startMag();}
 function startMag(){
   stopMag();
