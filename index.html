@@ -30,27 +30,27 @@ h3{font-size:15px;margin:22px 0 8px;color:var(--mut);text-transform:uppercase;le
 .wrap .pill{background:var(--card);border-color:var(--line)}
 /* camera */
 #cam{position:fixed;inset:0;background:#000;overflow:hidden}
-#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
 #video.mirror{transform:scaleX(-1)}
-#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#ov{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
 .f-red{filter:url(#redf) contrast(1.4)}
 .f-contrast{filter:grayscale(1) contrast(3) brightness(.55)}
 .f-invert{filter:invert(1) contrast(1.6)}
 .f-boost{filter:brightness(1.6) contrast(1.5) saturate(2.2)}
 .mirror.f-red,.mirror.f-contrast,.mirror.f-invert,.mirror.f-boost{transform:scaleX(-1)}
-.topbar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;background:linear-gradient(#000c,#0000)}
+.topbar{z-index:5;position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;background:linear-gradient(#000c,#0000)}
 .topbar h2{flex:1;font-size:17px;color:#fff}
 #count{font-weight:700}
 #count.alert{background:var(--acc);border-color:var(--acc)}
-#hint{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 62px);font-size:13px;color:#fffe;text-shadow:0 1px 3px #000,0 0 8px #000;transition:opacity .4s}
-.bottom{position:absolute;left:0;right:0;bottom:0;padding:30px 12px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(#0000,#000d 35%)}
+#hint{z-index:5;position:absolute;pointer-events:none;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 62px);font-size:13px;color:#fffe;text-shadow:0 1px 3px #000,0 0 8px #000;transition:opacity .4s}
+.bottom{z-index:5;position:absolute;left:0;right:0;bottom:0;padding:30px 12px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(#0000,#000d 35%)}
 .row{display:flex;gap:7px}
 .btn{flex:1;background:#1c2128ee;border:1px solid #fff2;color:#fff;border-radius:12px;padding:11px 2px;font-size:13px;font-weight:600;min-width:0}
 .btn.act{background:var(--acc);border-color:var(--acc)}
 .btn:disabled{opacity:.35}
 .slider{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;color:#ddd}
 .slider input{flex:1;accent-color:var(--acc)}
-#err{position:absolute;left:16px;right:16px;top:35%;background:#000e;border:1px solid var(--acc);border-radius:12px;padding:16px;display:none;color:#fff}
+#err{z-index:6;position:absolute;left:16px;right:16px;top:35%;background:#000e;border:1px solid var(--acc);border-radius:12px;padding:16px;display:none;color:#fff}
 /* magnet */
 .big{font-size:56px;font-weight:800;text-align:center;margin:10px 0 0;font-variant-numeric:tabular-nums}
 .unit{text-align:center;color:var(--mut);font-size:13px;margin-bottom:16px}
@@ -105,7 +105,7 @@ h3{font-size:15px;margin:22px 0 8px;color:var(--mut);text-transform:uppercase;le
       <button class="btn" id="bPause" onclick="togglePause()">Freeze</button>
       <button class="btn" id="bFlip" onclick="flipCam()">Flip</button>
     </div>
-    <label class="slider">Sensitivity <input id="sens" type="range" min="1" max="10" value="5"></label>
+    <label class="slider">Sensitivity <input id="sens" type="range" min="1" max="10" value="4"></label>
   </div>
 </section>
 
@@ -138,7 +138,8 @@ h3{font-size:15px;margin:22px 0 8px;color:var(--mut);text-transform:uppercase;le
 const $=s=>document.querySelector(s);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);}
 function goHome(){stopCam();stopMag();show('home');}
-if(location.protocol==='file:'||!navigator.mediaDevices) $('#fileWarn').style.display='block';
+const notWeb=!/^https?:$/.test(location.protocol);
+if(notWeb||!navigator.mediaDevices) $('#fileWarn').style.display='block';
 
 /* ================= CAMERA ================= */
 const video=$('#video'), ov=$('#ov'), octx=ov.getContext('2d');
@@ -147,7 +148,7 @@ let stream=null, track=null, facing='environment', camMode='lens', torchOn=false
 const FILTERS={lens:['','f-red','f-contrast','f-invert'], ir:['f-boost','','f-contrast']};
 const FNAMES={'':'Normal','f-red':'Red','f-contrast':'Contrast','f-invert':'Invert','f-boost':'Boost'};
 const HINTS={
- lens:'Dim the room, keep the light on, hold the phone near eye level. Sweep slowly. A hidden lens shows as a tiny sharp dot that stays bright as you move a little. Red circles = look closer. Shiny surfaces (screws, glass) cause false alarms.',
+ lens:'Dim the room, keep the light on, hold the phone near eye level. Sweep slowly. A hidden lens shows as a tiny sharp dot that stays bright as you move a little. Red = lens glint, purple = infrared light. Hold still on a spot for a second to confirm it. Shiny surfaces (screws, glass) cause false alarms.',
  ir:'Turn the lights OFF. Sweep slowly. Night-vision cameras show glowing purple/white dots. Test first: point a TV remote at the camera and press a button. If you don\'t see a flash, tap Flip to try the other camera.'
 };
 
@@ -166,8 +167,8 @@ function stopCam(){cancelAnimationFrame(raf);raf=0;stopStream();video.srcObject=
 async function startCam(){
   stopStream(); cancelAnimationFrame(raf);
   $('#err').style.display='none';
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
-    return camErr('Camera not available. Open this page from its https:// web address in Chrome, not as a downloaded file.');
+  if(notWeb||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+    return camErr('This was opened as a downloaded file, and Chrome blocks the camera on those. Open it from its https:// web address instead.');
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}}});
   }catch(e){
@@ -214,9 +215,13 @@ function updateBtns(){
   $('#bPause').textContent=paused?'Resume':'Freeze';
 }
 
-/* ---- glint detection ---- */
-const W=480;
-let lum=null, vis=null, tracks=[], lastSteady=0, lastBuzz=0;
+/* ---- detection ---- */
+// Two things are looked for:
+//  GLINT: a tiny, near-white, very bright dot much brighter than what's around it (lens reflecting the flashlight)
+//  IR:    a small purple/magenta glow (night-vision LEDs as the phone camera sees them)
+// A spot is only marked after it has been seen steadily for about half a second.
+const W=480, CONFIRM=8;
+let lum=null, mask=null, tracks=[], lastSteady=0, lastBuzz=0;
 function sizeOverlay(){
   const d=devicePixelRatio||1, w=Math.round(ov.clientWidth*d), h=Math.round(ov.clientHeight*d);
   if(ov.width!==w||ov.height!==h){ov.width=w;ov.height=h;}
@@ -238,84 +243,102 @@ function loop(){
 }
 function findBlobs(d,W,H){
   const n=W*H;
-  if(!lum||lum.length!==n){lum=new Uint8Array(n);vis=new Uint8Array(n);}
-  let sum=0;
-  for(let i=0,j=0;i<n;i++,j+=4){const l=(d[j]*77+d[j+1]*150+d[j+2]*29)>>8;lum[i]=l;sum+=l;}
-  const mean=sum/n;
-  const thr=Math.max(250-(+$('#sens').value)*6, Math.min(245,mean+60));
-  vis.fill(0);
-  const maxA=Math.max(12,(n*0.0015)|0), out=[], st=[];
+  if(!lum||lum.length!==n){lum=new Uint8Array(n);mask=new Uint8Array(n);}
+  const sens=+$('#sens').value;                 // 1..10
+  const gThr=252-sens*2.5;                      // glint brightness: 249 (strict) .. 227 (loose)
+  const pDiff=70-sens*3;                        // purple strength: 67 .. 40
+  for(let i=0,j=0;i<n;i++,j+=4){
+    const r=d[j],g=d[j+1],b=d[j+2],l=(r*77+g*150+b*29)>>8;
+    lum[i]=l;
+    let m=0;
+    if(l>=gThr&&Math.min(r,g,b)>=gThr-15) m=1;                       // near-white hot spot
+    else if(l>70&&r-g>=pDiff&&b-g>=pDiff*0.8&&Math.abs(r-b)<90) m=2; // purple glow
+    mask[i]=m;
+  }
+  const maxA=Math.max(10,(n*0.0008)|0), out=[], st=[];
+  const margin=6;
   for(let i=0;i<n;i++){
-    if(vis[i]||lum[i]<thr)continue;
+    const kind=mask[i]; if(!kind)continue;
     let area=0,sx=0,sy=0,minx=W,maxx=0,miny=H,maxy=0,peak=0;
-    st.length=0;st.push(i);vis[i]=1;
+    st.length=0;st.push(i);mask[i]=0;
     while(st.length){
       const p=st.pop(),x=p%W,y=(p/W)|0;
       area++;sx+=x;sy+=y;
       if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
       if(lum[p]>peak)peak=lum[p];
       let q;
-      if(x>0&&!vis[q=p-1]&&lum[q]>=thr){vis[q]=1;st.push(q);}
-      if(x<W-1&&!vis[q=p+1]&&lum[q]>=thr){vis[q]=1;st.push(q);}
-      if(y>0&&!vis[q=p-W]&&lum[q]>=thr){vis[q]=1;st.push(q);}
-      if(y<H-1&&!vis[q=p+W]&&lum[q]>=thr){vis[q]=1;st.push(q);}
+      if(x>0&&mask[q=p-1]===kind){mask[q]=0;st.push(q);}
+      if(x<W-1&&mask[q=p+1]===kind){mask[q]=0;st.push(q);}
+      if(y>0&&mask[q=p-W]===kind){mask[q]=0;st.push(q);}
+      if(y<H-1&&mask[q=p+W]===kind){mask[q]=0;st.push(q);}
     }
-    if(area>maxA)continue;                       // too big: lamp, window, screen
+    if(area>maxA)continue;                              // too big: lamp, window, white wall
+    if(kind===1&&area<2)continue;                       // single-pixel noise
     const bw=maxx-minx+1,bh=maxy-miny+1;
-    if(bw>3*bh+2||bh>3*bw+2)continue;            // streak, not a dot
-    const cx=sx/area,cy=sy/area,r=Math.max(bw,bh)/2,rr=Math.ceil(r)+4;
-    let rs=0,rc=0;
-    for(let a=0;a<16;a++){
-      const ang=a*Math.PI/8,x=Math.round(cx+Math.cos(ang)*rr),y=Math.round(cy+Math.sin(ang)*rr);
-      if(x<0||y<0||x>=W||y>=H)continue;
-      rs+=lum[y*W+x];rc++;
+    if(bw>2*bh+1||bh>2*bw+1)continue;                   // streak or edge, not a dot
+    const cx=sx/area,cy=sy/area;
+    if(cx<margin||cy<margin||cx>W-margin||cy>H-margin)continue;
+    const r=Math.max(bw,bh)/2;
+    if(kind===1){
+      // the ring around a real glint must be much darker
+      const rr=Math.ceil(r)+5; let rs=0,rc=0,rmax=0;
+      for(let a=0;a<16;a++){
+        const ang=a*Math.PI/8,x=Math.round(cx+Math.cos(ang)*rr),y=Math.round(cy+Math.sin(ang)*rr);
+        if(x<0||y<0||x>=W||y>=H)continue;
+        const v=lum[y*W+x]; rs+=v; rc++; if(v>rmax)rmax=v;
+      }
+      if(!rc||peak-rs/rc<110||rmax>peak-40)continue;
     }
-    if(!rc||peak-rs/rc<70)continue;              // must stand out from its surroundings
-    out.push({x:cx,y:cy,r});
-    if(out.length>60)break;
+    out.push({x:cx,y:cy,r,kind});
+    if(out.length>40)break;
   }
   return out;
 }
 function updateTracks(blobs){
   for(const t of tracks)t.m=false;
   for(const b of blobs){
-    let best=null,bd=10;
-    for(const t of tracks){if(t.m)continue;const dd=Math.hypot(t.x-b.x,t.y-b.y);if(dd<bd){bd=dd;best=t;}}
-    if(best){best.x=(best.x+b.x)/2;best.y=(best.y+b.y)/2;best.r=b.r;best.hits++;best.miss=0;best.m=true;}
-    else tracks.push({x:b.x,y:b.y,r:b.r,hits:1,miss:0,m:true});
+    let best=null,bd=8;
+    for(const t of tracks){if(t.m||t.kind!==b.kind)continue;const dd=Math.hypot(t.x-b.x,t.y-b.y);if(dd<bd){bd=dd;best=t;}}
+    if(best){best.x=best.x*.6+b.x*.4;best.y=best.y*.6+b.y*.4;best.r=b.r;best.hits++;best.miss=0;best.m=true;}
+    else tracks.push({x:b.x,y:b.y,r:b.r,kind:b.kind,hits:1,miss:0,m:true});
   }
-  tracks=tracks.filter(t=>{if(!t.m)t.miss++;return t.miss<=4;});
-  if(tracks.length>80)tracks=tracks.slice(-80);
+  tracks=tracks.filter(t=>{
+    if(!t.m){t.miss++; if(t.hits<CONFIRM)t.hits=Math.max(0,t.hits-2);}
+    return t.miss<=(t.hits>=CONFIRM?6:2);
+  });
+  if(tracks.length>60)tracks=tracks.slice(-60);
 }
 function draw(vw,vh){
   const cw=ov.width,ch=ov.height,k=vw/W,dpr=devicePixelRatio||1;
   const s=Math.max(cw/vw,ch/vh),ox=(cw-vw*s)/2,oy=(ch-vh*s)/2;
   let steady=0;
+  octx.font=(12*dpr)+'px system-ui,sans-serif';octx.textAlign='center';
   for(const t of tracks){
-    if(t.miss>1||t.hits<2)continue;
+    if(t.hits<CONFIRM)continue;                 // only steady spots are shown
+    steady++;
     let x=t.x*k*s+ox;const y=t.y*k*s+oy;
     if(facing==='user')x=cw-x;
-    const sus=t.hits>=5;
-    const rad=Math.max(t.r*k*s,4*dpr)+(sus?16:9)*dpr;
-    octx.beginPath();octx.arc(x,y,rad,0,Math.PI*2);
-    if(sus){
-      steady++;
-      octx.strokeStyle='#ff453a';octx.lineWidth=3*dpr;octx.stroke();
-      octx.beginPath();
-      octx.moveTo(x-rad-8*dpr,y);octx.lineTo(x-rad+4*dpr,y);
-      octx.moveTo(x+rad-4*dpr,y);octx.lineTo(x+rad+8*dpr,y);
-      octx.moveTo(x,y-rad-8*dpr);octx.lineTo(x,y-rad+4*dpr);
-      octx.moveTo(x,y+rad-4*dpr);octx.lineTo(x,y+rad+8*dpr);
-      octx.stroke();
-    }else{
-      octx.strokeStyle='rgba(255,214,10,.7)';octx.lineWidth=1.5*dpr;octx.stroke();
-    }
+    const col=t.kind===2?'#bf5af2':'#ff453a';
+    const rad=Math.max(t.r*k*s,4*dpr)+14*dpr;
+    octx.globalAlpha=t.miss?0.5:1;
+    octx.strokeStyle=col;octx.lineWidth=3*dpr;
+    octx.beginPath();octx.arc(x,y,rad,0,Math.PI*2);octx.stroke();
+    octx.beginPath();
+    octx.moveTo(x-rad-8*dpr,y);octx.lineTo(x-rad+4*dpr,y);
+    octx.moveTo(x+rad-4*dpr,y);octx.lineTo(x+rad+8*dpr,y);
+    octx.moveTo(x,y-rad-8*dpr);octx.lineTo(x,y-rad+4*dpr);
+    octx.moveTo(x,y+rad-4*dpr);octx.lineTo(x,y+rad+8*dpr);
+    octx.stroke();
+    const label=t.kind===2?'IR light':'Glint';
+    octx.lineWidth=3*dpr;octx.strokeStyle='#000';octx.strokeText(label,x,y-rad-12*dpr);
+    octx.fillStyle=col;octx.fillText(label,x,y-rad-12*dpr);
+    octx.globalAlpha=1;
   }
   const cnt=$('#count');
-  cnt.textContent=steady?steady+' suspect'+(steady>1?'s':''):'Scanning';
+  cnt.textContent=steady?steady+' found':'Scanning';
   cnt.classList.toggle('alert',steady>0);
   const now=Date.now();
-  if(steady>lastSteady&&now-lastBuzz>1500&&navigator.vibrate){navigator.vibrate(60);lastBuzz=now;}
+  if(steady>lastSteady&&now-lastBuzz>1500&&navigator.vibrate){navigator.vibrate(80);lastBuzz=now;}
   lastSteady=steady;
 }
 
