@@ -315,9 +315,17 @@ function findBlobs(d,W,H){
       if(!rc||peak-rs/rc<110||rmax>peak-40)continue;
     }
     out.push({x:cx,y:cy,r,kind});
-    if(out.length>40)break;
+    if(out.length>120)break;
   }
-  return out;
+  // A real lens glint is a lone dot. Bright dots that come in groups are screen text,
+  // patterns or sparkly surfaces, so drop any glint with 2+ other bright dots nearby.
+  const g=out.filter(b=>b.kind===1);
+  return out.filter(b=>{
+    if(b.kind!==1)return true;
+    let near=0;
+    for(const o of g){if(o!==b&&Math.abs(o.x-b.x)<30&&Math.abs(o.y-b.y)<30&&++near>=2)return false;}
+    return true;
+  }).slice(0,40);
 }
 function updateTracks(blobs){
   for(const t of tracks)t.m=false;
